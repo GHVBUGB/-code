@@ -1,0 +1,338 @@
+/**
+ * Design System - Design Tokens
+ * 统一的设计规范和主题变量
+ */
+
+:root {
+  /* ============================================
+   * Color System - 颜色系统
+   * ============================================ */
+
+  /* Primary Colors - 主色调 */
+  --color-primary-50: oklch(0.985 0.05 45);
+  --color-primary-100: oklch(0.97 0.08 45);
+  --color-primary-200: oklch(0.94 0.12 45);
+  --color-primary-300: oklch(0.88 0.16 45);
+  --color-primary-400: oklch(0.82 0.20 45);
+  --color-primary-500: oklch(0.75 0.22 45); /* 主色 */
+  --color-primary-600: oklch(0.68 0.20 45);
+  --color-primary-700: oklch(0.60 0.18 45);
+  --color-primary-800: oklch(0.52 0.16 45);
+  --color-primary-900: oklch(0.45 0.14 45);
+  --color-primary-950: oklch(0.38 0.12 45);
+
+  /* Secondary Colors - 次要色调 */
+  --color-secondary-50: oklch(0.985 0.05 270);
+  --color-secondary-100: oklch(0.97 0.08 270);
+  --color-secondary-200: oklch(0.94 0.12 270);
+  --color-secondary-300: oklch(0.88 0.16 270);
+  --color-secondary-400: oklch(0.82 0.20 270);
+  --color-secondary-500: oklch(0.75 0.22 270); /* 次要色 */
+  --color-secondary-600: oklch(0.68 0.20 270);
+  --color-secondary-700: oklch(0.60 0.18 270);
+  --color-secondary-800: oklch(0.52 0.16 270);
+  --color-secondary-900: oklch(0.45 0.14 270);
+  --color-secondary-950: oklch(0.38 0.12 270);
+
+  /* Accent Colors - 强调色 */
+  --color-accent-50: oklch(0.985 0.05 180);
+  --color-accent-100: oklch(0.97 0.08 180);
+  --color-accent-200: oklch(0.94 0.12 180);
+  --color-accent-300: oklch(0.88 0.16 180);
+  --color-accent-400: oklch(0.82 0.20 180);
+  --color-accent-500: oklch(0.75 0.22 180); /* 强调色 */
+  --color-accent-600: oklch(0.68 0.20 180);
+  --color-accent-700: oklch(0.60 0.18 180);
+  --color-accent-800: oklch(0.52 0.16 180);
+  --color-accent-900: oklch(0.45 0.14 180);
+  --color-accent-950: oklch(0.38 0.12 180);
+
+  /* Neutral Colors - 中性色 */
+  --color-neutral-0: oklch(1 0 0);      /* 纯白 */
+  --color-neutral-50: oklch(0.985 0 0);
+  --color-neutral-100: oklch(0.97 0 0);
+  --color-neutral-200: oklch(0.94 0 0);
+  --color-neutral-300: oklch(0.88 0 0);
+  --color-neutral-400: oklch(0.82 0 0);
+  --color-neutral-500: oklch(0.75 0 0);
+  --color-neutral-600: oklch(0.68 0 0);
+  --color-neutral-700: oklch(0.60 0 0);
+  --color-neutral-800: oklch(0.52 0 0);
+  --color-neutral-900: oklch(0.45 0 0);
+  --color-neutral-950: oklch(0.38 0 0);
+  --color-neutral-1000: oklch(0 0 0);  /* 纯黑 */
+
+  /* Semantic Colors - 语义色 */
+  --color-success-50: oklch(0.985 0.05 140);
+  --color-success-500: oklch(0.75 0.22 140);
+  --color-success-600: oklch(0.68 0.20 140);
+
+  --color-warning-50: oklch(0.985 0.05 80);
+  --color-warning-500: oklch(0.75 0.22 80);
+  --color-warning-600: oklch(0.68 0.20 80);
+
+  --color-error-50: oklch(0.985 0.05 25);
+  --color-error-500: oklch(0.75 0.22 25);
+  --color-error-600: oklch(0.68 0.20 25);
+
+  --color-info-50: oklch(0.985 0.05 220);
+  --color-info-500: oklch(0.75 0.22 220);
+  --color-info-600: oklch(0.68 0.20 220);
+
+  /* ============================================
+   * Typography - 字体系统
+   * ============================================ */
+
+  /* Font Families */
+  --font-family-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-family-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.25rem;     /* 20px */
+  --font-size-2xl: 1.5rem;     /* 24px */
+  --font-size-3xl: 1.875rem;   /* 30px */
+  --font-size-4xl: 2.25rem;    /* 36px */
+  --font-size-5xl: 3rem;       /* 48px */
+  --font-size-6xl: 3.75rem;    /* 60px */
+  --font-size-7xl: 4.5rem;     /* 72px */
+  --font-size-8xl: 6rem;       /* 96px */
+  --font-size-9xl: 8rem;       /* 128px */
+
+  /* Font Weights */
+  --font-weight-thin: 100;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* ============================================
+   * Spacing - 间距系统
+   * ============================================ */
+
+  --spacing-0: 0;
+  --spacing-0.5: 0.125rem;   /* 2px */
+  --spacing-1: 0.25rem;      /* 4px */
+  --spacing-1.5: 0.375rem;   /* 6px */
+  --spacing-2: 0.5rem;       /* 8px */
+  --spacing-2.5: 0.625rem;   /* 10px */
+  --spacing-3: 0.75rem;      /* 12px */
+  --spacing-3.5: 0.875rem;   /* 14px */
+  --spacing-4: 1rem;         /* 16px */
+  --spacing-5: 1.25rem;      /* 20px */
+  --spacing-6: 1.5rem;       /* 24px */
+  --spacing-7: 1.75rem;      /* 28px */
+  --spacing-8: 2rem;         /* 32px */
+  --spacing-9: 2.25rem;      /* 36px */
+  --spacing-10: 2.5rem;      /* 40px */
+  --spacing-11: 2.75rem;     /* 44px */
+  --spacing-12: 3rem;        /* 48px */
+  --spacing-14: 3.5rem;      /* 56px */
+  --spacing-16: 4rem;        /* 64px */
+  --spacing-20: 5rem;        /* 80px */
+  --spacing-24: 6rem;        /* 96px */
+  --spacing-28: 7rem;        /* 112px */
+  --spacing-32: 8rem;        /* 128px */
+  --spacing-36: 9rem;        /* 144px */
+  --spacing-40: 10rem;       /* 160px */
+  --spacing-44: 11rem;       /* 176px */
+  --spacing-48: 12rem;       /* 192px */
+  --spacing-52: 13rem;       /* 208px */
+  --spacing-56: 14rem;       /* 224px */
+  --spacing-60: 15rem;       /* 240px */
+  --spacing-64: 16rem;       /* 256px */
+  --spacing-72: 18rem;       /* 288px */
+  --spacing-80: 20rem;       /* 320px */
+  --spacing-96: 24rem;       /* 384px */
+
+  /* ============================================
+   * Radii - 圆角系统
+   * ============================================ */
+
+  --radius-none: 0;
+  --radius-sm: 0.125rem;     /* 2px */
+  --radius-base: 0.25rem;    /* 4px */
+  --radius-md: 0.375rem;     /* 6px */
+  --radius-lg: 0.5rem;       /* 8px */
+  --radius-xl: 0.75rem;      /* 12px */
+  --radius-2xl: 1rem;        /* 16px */
+  --radius-3xl: 1.5rem;      /* 24px */
+  --radius-full: 9999px;     /* 完全圆角 */
+
+  /* ============================================
+   * Shadows - 阴影系统
+   * ============================================ */
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-base: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-2xl: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --shadow-none: none;
+
+  /* ============================================
+   * Z-Index - 层级系统
+   * ============================================ */
+
+  --z-index-hide: -1;
+  --z-index-base: 0;
+  --z-index-raised: 1;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+
+  /* ============================================
+   * Transitions - 过渡动画
+   * ============================================ */
+
+  --transition-duration-fast: 150ms;
+  --transition-duration-base: 200ms;
+  --transition-duration-slow: 300ms;
+  --transition-duration-slower: 500ms;
+
+  --transition-timing-linear: linear;
+  --transition-timing-ease: ease;
+  --transition-timing-ease-in: ease-in;
+  --transition-timing-ease-out: ease-out;
+  --transition-timing-ease-in-out: ease-in-out;
+}
+
+/**
+ * Dark Theme Overrides
+ * 暗色主题覆盖
+ */
+.dark {
+  /* Primary Colors - Dark Mode */
+  --color-primary-50: oklch(0.38 0.12 45);
+  --color-primary-100: oklch(0.45 0.14 45);
+  --color-primary-200: oklch(0.52 0.16 45);
+  --color-primary-300: oklch(0.60 0.18 45);
+  --color-primary-400: oklch(0.68 0.20 45);
+  --color-primary-500: oklch(0.75 0.22 45);
+  --color-primary-600: oklch(0.82 0.20 45);
+  --color-primary-700: oklch(0.88 0.16 45);
+  --color-primary-800: oklch(0.94 0.12 45);
+  --color-primary-900: oklch(0.97 0.08 45);
+  --color-primary-950: oklch(0.985 0.05 45);
+
+  /* Semantic Colors - Dark Mode */
+  --color-success-50: oklch(0.38 0.12 140);
+  --color-success-500: oklch(0.75 0.22 140);
+  --color-success-600: oklch(0.82 0.20 140);
+
+  --color-warning-50: oklch(0.38 0.12 80);
+  --color-warning-500: oklch(0.75 0.22 80);
+  --color-warning-600: oklch(0.82 0.20 80);
+
+  --color-error-50: oklch(0.38 0.12 25);
+  --color-error-500: oklch(0.75 0.22 25);
+  --color-error-600: oklch(0.82 0.20 25);
+
+  --color-info-50: oklch(0.38 0.12 220);
+  --color-info-500: oklch(0.75 0.22 220);
+  --color-info-600: oklch(0.82 0.20 220);
+}
+
+/**
+ * Utility Classes for Design Tokens
+ * 设计令牌的实用工具类
+ */
+
+/* Color Utilities */
+.bg-primary { background-color: var(--color-primary-500); }
+.bg-primary-light { background-color: var(--color-primary-400); }
+.bg-primary-dark { background-color: var(--color-primary-600); }
+
+.text-primary { color: var(--color-primary-500); }
+.text-primary-light { color: var(--color-primary-400); }
+.text-primary-dark { color: var(--color-primary-600); }
+
+.border-primary { border-color: var(--color-primary-500); }
+.border-primary-light { border-color: var(--color-primary-400); }
+.border-primary-dark { border-color: var(--color-primary-600); }
+
+/* Gradient Utilities */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+}
+.gradient-secondary {
+  background: linear-gradient(135deg, var(--color-secondary-500), var(--color-secondary-600));
+}
+.gradient-accent {
+  background: linear-gradient(135deg, var(--color-accent-500), var(--color-accent-600));
+}
+
+/* Typography Utilities */
+.text-h1 { font-size: var(--font-size-6xl); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); }
+.text-h2 { font-size: var(--font-size-5xl); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); }
+.text-h3 { font-size: var(--font-size-4xl); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight); }
+.text-h4 { font-size: var(--font-size-3xl); font-weight: var(--font-weight-semibold); line-height: var(--line-height-tight); }
+.text-h5 { font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); line-height: var(--line-height-snug); }
+.text-h6 { font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); line-height: var(--line-height-snug); }
+
+.text-body-lg { font-size: var(--font-size-lg); font-weight: var(--font-weight-normal); line-height: var(--line-height-relaxed); }
+.text-body { font-size: var(--font-size-base); font-weight: var(--font-weight-normal); line-height: var(--line-height-normal); }
+.text-body-sm { font-size: var(--font-size-sm); font-weight: var(--font-weight-normal); line-height: var(--line-height-normal); }
+.text-caption { font-size: var(--font-size-xs); font-weight: var(--font-weight-normal); line-height: var(--line-height-tight); }
+
+/* Spacing Utilities */
+.spacing-xs { padding: var(--spacing-1); }
+.spacing-sm { padding: var(--spacing-2); }
+.spacing-md { padding: var(--spacing-4); }
+.spacing-lg { padding: var(--spacing-6); }
+.spacing-xl { padding: var(--spacing-8); }
+
+/* Border Radius Utilities */
+.rounded-xs { border-radius: var(--radius-sm); }
+.rounded-sm { border-radius: var(--radius-base); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-2xl { border-radius: var(--radius-2xl); }
+.rounded-3xl { border-radius: var(--radius-3xl); }
+.rounded-full { border-radius: var(--radius-full); }
+
+/* Shadow Utilities */
+.shadow-xs { box-shadow: var(--shadow-xs); }
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-base { box-shadow: var(--shadow-base); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+.shadow-2xl { box-shadow: var(--shadow-2xl); }
+.shadow-inner { box-shadow: var(--shadow-inner); }
+.shadow-none { box-shadow: var(--shadow-none); }
+
+/* Transition Utilities */
+.transition-fast { transition-duration: var(--transition-duration-fast); }
+.transition-base { transition-duration: var(--transition-duration-base); }
+.transition-slow { transition-duration: var(--transition-duration-slow); }
+.transition-slower { transition-duration: var(--transition-duration-slower); }
+
+.transition-linear { transition-timing-function: var(--transition-timing-linear); }
+.transition-ease { transition-timing-function: var(--transition-timing-ease); }
+.transition-ease-in { transition-timing-function: var(--transition-timing-ease-in); }
+.transition-ease-out { transition-timing-function: var(--transition-timing-ease-out); }
+.transition-ease-in-out { transition-timing-function: var(--transition-timing-ease-in-out); }

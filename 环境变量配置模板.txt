@@ -1,0 +1,25 @@
+# 复制以下内容到 .env.local 文件中
+# 将 YOUR_ACTUAL_API_KEY 替换为你的真实OpenRouter API密钥
+
+NEXT_PUBLIC_OPENROUTER_API_KEY=sk-or-v1-YOUR_ACTUAL_API_KEY
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
+
+# 如何获取API密钥：
+# 1. 访问 https://openrouter.co/
+# 2. 注册并登录账户
+# 3. 进入 https://openrouter.co/token
+# 4. 点击 "Create Key" 创建新密钥
+# 5. 复制完整密钥（格式：sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx）
+# 6. 确保账户有足够余额（建议充值$5-10用于测试）
+
+# 重要更新：
+# - OpenRouter官方域名已更新为 openrouter.co
+# - API基础URL: https://openrouter.co/v1
+# - 官方文档: https://docs.openrouter.co/
+
+# 创建.env.local文件的步骤：
+# 1. 在qd文件夹中创建新文件，命名为 .env.local
+# 2. 复制上面的环境变量内容到文件中
+# 3. 将YOUR_ACTUAL_API_KEY替换为你的真实API密钥
+# 4. 保存文件
