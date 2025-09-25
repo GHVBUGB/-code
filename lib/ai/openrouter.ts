@@ -45,17 +45,28 @@ export interface PRDData {
 }
 
 export const AI_MODELS = {
-  // OpenAI 系列 - 最新模型
-  CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
-  GPT45_PREVIEW: 'openai/gpt-4.5-preview',
-  GPT4O_SEARCH: 'openai/gpt-4o-search-preview',
-  GPT4_TURBO: 'openai/gpt-4-turbo',
-  
-  // Anthropic 系列 - 最新模型
-  CLAUDE_OPUS_4: 'anthropic/claude-opus-4',
-  CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
-  CLAUDE_37_SONNET_THINKING: 'anthropic/claude-3.7-sonnet-thinking',
+  // Anthropic 系列 - 推荐使用（地区兼容性好）
   CLAUDE_35_SONNET: 'anthropic/claude-3.5-sonnet',
+  CLAUDE_37_SONNET_THINKING: 'anthropic/claude-3.7-sonnet-thinking',
+  CLAUDE_SONNET_4: 'anthropic/claude-sonnet-4',
+  CLAUDE_OPUS_4: 'anthropic/claude-opus-4',
+  
+  // Google 系列 - 地区兼容性好
+  GEMINI_PRO: 'google/gemini-pro',
+  GEMINI_25_PRO_PREVIEW: 'google/gemini-2.5-pro-preview',
+  GEMINI_25_FLASH_PREVIEW: 'google/gemini-2.5-flash-preview',
+  
+  // Meta 系列 - 开源模型
+  LLAMA_31_8B: 'meta-llama/llama-3.1-8b-instruct',
+  LLAMA_31_70B: 'meta-llama/llama-3.1-70b-instruct',
+  
+  // 其他可用模型
+  MISTRAL_7B: 'mistralai/mistral-7b-instruct',
+  DEEPSEEK_CHAT: 'deepseek/deepseek-chat',
+  
+  // OpenAI 系列 - 可能有地区限制
+  GPT4_TURBO: 'openai/gpt-4-turbo',
+  GPT35_TURBO: 'openai/gpt-3.5-turbo',
   
   // Google 系列 - 最新模型
   GEMINI_25_PRO_PREVIEW: 'google/gemini-2.5-pro-preview',

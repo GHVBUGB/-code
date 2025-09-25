@@ -13,7 +13,7 @@ const DEFAULT_CONFIG: APIConfig = {
   openrouter: {
     apiKey: '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',
     baseUrl: 'https://openrouter.ai/api/v1',
-    defaultModel: 'anthropic/claude-sonnet-4', // 使用Claude 4
+    defaultModel: 'anthropic/claude-3.5-sonnet', // 使用Claude 3.5
     fallbackModel: 'anthropic/claude-3.5-sonnet'
   }
 }

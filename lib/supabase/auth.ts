@@ -1,4 +1,5 @@
 import { supabase, supabaseAdmin } from './client'
+import { LocalAuthService, type LoginData, type RegisterData } from '../auth/local-auth'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { z } from 'zod'
@@ -24,27 +25,14 @@ export type RegisterData = z.infer<typeof registerSchema>
 
 // Authentication service
 export class AuthService {
-  // Mock store helpers for dev fallback
-  private static getMockUsers(): any[] {
-    if (typeof window === 'undefined') return []
+  // Check if Supabase is available
+  private static async isSupabaseAvailable(): Promise<boolean> {
     try {
-      const raw = localStorage.getItem('mock-users')
-      return raw ? JSON.parse(raw) : []
+      const { data, error } = await supabase.from('users').select('count').limit(1)
+      return !error
     } catch {
-      return []
+      return false
     }
-  }
-
-  private static saveMockUsers(users: any[]) {
-    if (typeof window === 'undefined') return
-    localStorage.setItem('mock-users', JSON.stringify(users))
-  }
-
-  private static generateId(): string {
-    if (typeof crypto !== 'undefined' && (crypto as any).randomUUID) {
-      return (crypto as any).randomUUID()
-    }
-    return 'u-' + Math.random().toString(36).slice(2) + Date.now().toString(36)
   }
   // Hash password with salt
   static async hashPassword(password: string): Promise<{ hash: string; salt: string }> {
@@ -60,168 +48,152 @@ export class AuthService {
 
   // Register user
   static async register(data: RegisterData) {
-    try {
-      // Validate input
-      const validatedData = registerSchema.parse(data)
-
-      // Check if user already exists
-      const { data: existingUser } = await supabaseAdmin
-        .from('users')
-        .select('id')
-        .or(`username.eq.${validatedData.username},email.eq.${validatedData.email}`)
-        .single()
-
-      if (existingUser) {
-        throw new Error('用户名或邮箱已存在')
-      }
-
-      // Hash password
-      const { hash, salt } = await this.hashPassword(validatedData.password)
-
-      // Create user
-      const { data: user, error } = await supabaseAdmin
-        .from('users')
-        .insert({
-          username: validatedData.username,
-          email: validatedData.email,
-          password_hash: hash,
-          salt: salt,
-          is_active: true
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      return {
-        success: true,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email
-        }
-      }
-    } catch (error) {
-      // Dev fallback: use localStorage when Supabase不可用
+    // Check if Supabase is available
+    const isSupabaseAvailable = await this.isSupabaseAvailable()
+    
+    if (isSupabaseAvailable) {
       try {
+        // Validate input
         const validatedData = registerSchema.parse(data)
-        const users = this.getMockUsers()
-        const duplicate = users.find((u) => u.email === validatedData.email || u.username === validatedData.username)
-        if (duplicate) {
-          return { success: false, error: '用户名或邮箱已存在' }
+
+        // Check if user already exists
+        const { data: existingUser } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .or(`username.eq.${validatedData.username},email.eq.${validatedData.email}`)
+          .single()
+
+        if (existingUser) {
+          throw new Error('用户名或邮箱已存在')
         }
+
+        // Hash password
         const { hash, salt } = await this.hashPassword(validatedData.password)
-        const newUser = {
-          id: this.generateId(),
-          username: validatedData.username,
-          email: validatedData.email,
-          password_hash: hash,
-          salt,
-          is_active: true,
-          created_at: new Date().toISOString(),
-        }
-        users.push(newUser)
-        this.saveMockUsers(users)
+
+        // Create user
+        const { data: user, error } = await supabaseAdmin
+          .from('users')
+          .insert({
+            username: validatedData.username,
+            email: validatedData.email,
+            password_hash: hash,
+            salt: salt,
+            is_active: true
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+
         return {
           success: true,
-          user: { id: newUser.id, username: newUser.username, email: newUser.email }
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email
+          }
         }
-      } catch (fallbackErr) {
-        return {
-          success: false,
-          error: fallbackErr instanceof Error ? fallbackErr.message : '注册失败'
-        }
+      } catch (error) {
+        // Fall back to local auth if Supabase fails
+        console.warn('Supabase registration failed, falling back to local auth:', error)
       }
     }
+
+    // Use local authentication
+    return await LocalAuthService.register(data)
   }
 
   // Login user
   static async login(data: LoginData) {
-    try {
-      // Validate input
-      const validatedData = loginSchema.parse(data)
-
-      // Find user by email
-      const { data: user, error } = await supabaseAdmin
-        .from('users')
-        .select('*')
-        .eq('email', validatedData.email)
-        .eq('is_active', true)
-        .single()
-
-      if (error || !user) {
-        throw new Error('邮箱或密码错误')
-      }
-
-      // Verify password
-      const isValidPassword = await this.verifyPassword(
-        validatedData.password,
-        user.password_hash,
-        user.salt
-      )
-
-      if (!isValidPassword) {
-        throw new Error('邮箱或密码错误')
-      }
-
-      return {
-        success: true,
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email
-        }
-      }
-    } catch (error) {
-      // Dev fallback: localStorage users
+    // Check if Supabase is available
+    const isSupabaseAvailable = await this.isSupabaseAvailable()
+    
+    if (isSupabaseAvailable) {
       try {
+        // Validate input
         const validatedData = loginSchema.parse(data)
-        const users = this.getMockUsers()
-        const user = users.find((u) => u.email === validatedData.email && u.is_active !== false)
-        if (!user) {
-          return { success: false, error: '邮箱或密码错误' }
+
+        // Find user by email
+        const { data: user, error } = await supabaseAdmin
+          .from('users')
+          .select('*')
+          .eq('email', validatedData.email)
+          .eq('is_active', true)
+          .single()
+
+        if (error || !user) {
+          throw new Error('邮箱或密码错误')
         }
-        const isValidPassword = await this.verifyPassword(validatedData.password, user.password_hash, user.salt)
+
+        // Verify password
+        const isValidPassword = await this.verifyPassword(
+          validatedData.password,
+          user.password_hash,
+          user.salt
+        )
+
         if (!isValidPassword) {
-          return { success: false, error: '邮箱或密码错误' }
+          throw new Error('邮箱或密码错误')
         }
+
         return {
           success: true,
-          user: { id: user.id, username: user.username, email: user.email }
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email
+          }
         }
-      } catch (fallbackErr) {
-        return {
-          success: false,
-          error: fallbackErr instanceof Error ? fallbackErr.message : '登录失败'
-        }
+      } catch (error) {
+        // Fall back to local auth if Supabase fails
+        console.warn('Supabase login failed, falling back to local auth:', error)
       }
     }
+
+    // Use local authentication
+    return await LocalAuthService.login(data)
   }
 
   // Get user by ID
   static async getUserById(userId: string) {
-    try {
-      const { data: user, error } = await supabaseAdmin
-        .from('users')
-        .select('id, username, email, created_at')
-        .eq('id', userId)
-        .eq('is_active', true)
-        .single()
+    // Check if Supabase is available
+    const isSupabaseAvailable = await this.isSupabaseAvailable()
+    
+    if (isSupabaseAvailable) {
+      try {
+        const { data: user, error } = await supabaseAdmin
+          .from('users')
+          .select('id, username, email, created_at')
+          .eq('id', userId)
+          .eq('is_active', true)
+          .single()
 
-      if (error || !user) {
-        throw new Error('用户不存在')
-      }
+        if (error || !user) {
+          throw new Error('用户不存在')
+        }
 
-      return {
-        success: true,
-        user
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : '获取用户信息失败'
+        return {
+          success: true,
+          user
+        }
+      } catch (error) {
+        // Fall back to local auth if Supabase fails
+        console.warn('Supabase getUserById failed, falling back to local auth:', error)
       }
     }
+
+    // Use local authentication
+    return await LocalAuthService.getUserById(userId)
+  }
+
+  // Get current session (local auth only)
+  static getCurrentSession() {
+    return LocalAuthService.getCurrentSession()
+  }
+
+  // Clear session (local auth only)
+  static clearSession() {
+    LocalAuthService.clearSession()
   }
 }
 

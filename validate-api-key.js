@@ -59,9 +59,9 @@ function testConnection(key) {
     console.log('\n🌐 连接测试:');
     
     const options = {
-      hostname: 'openrouter.ai',
+      hostname: 'openrouter.co',
       port: 443,
-      path: '/api/v1/models',
+      path: '/v1/models',
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${key}`,
@@ -140,9 +140,9 @@ function testChat(key) {
     });
 
     const options = {
-      hostname: 'openrouter.ai',
+      hostname: 'openrouter.co',
       port: 443,
-      path: '/api/v1/chat/completions',
+      path: '/v1/chat/completions',
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${key}`,

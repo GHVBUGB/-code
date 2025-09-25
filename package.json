@@ -6,7 +6,10 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "setup": "node setup-env.js",
+    "setup:env": "node setup-env.js",
+    "test:db": "node test-database.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

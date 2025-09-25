@@ -539,7 +539,7 @@ ${techStackAnalysis.suggestions}`
           method: 'POST',
           apiKey: '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',
           data: {
-            model: model || 'anthropic/claude-sonnet-4',
+            model: model || 'anthropic/claude-3.5-sonnet',
             messages: [
               {
                 role: 'user',
@@ -565,7 +565,7 @@ ${techStackAnalysis.suggestions}`
 
       if (!response.ok) {
         // 如果Claude Sonnet 4失败，自动回退到Claude 3.5
-        if (model === 'anthropic/claude-sonnet-4') {
+        if (model === 'anthropic/claude-3.5-sonnet') {
           console.log('Claude Sonnet 4 failed, falling back to Claude 3.5...')
           return this.optimizeDescription(projectData, 'anthropic/claude-3.5-sonnet')
         }
@@ -627,7 +627,7 @@ ${techStackAnalysis.suggestions}`
           method: 'POST',
           apiKey: apiKey,
           data: {
-            model: 'anthropic/claude-sonnet-4',
+            model: 'anthropic/claude-3.5-sonnet',
             messages: [
               {
                 role: 'system',
@@ -931,7 +931,7 @@ ${projectData.selectedTools && projectData.selectedTools.length > 0 ? `
           method: 'POST',
           apiKey: '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',
           data: {
-            model: model || 'anthropic/claude-sonnet-4',
+            model: model || 'anthropic/claude-3.5-sonnet',
             messages: [
               {
                 role: 'user',
@@ -1056,28 +1056,162 @@ ${questions.map((q, i) => `${i + 1}. ${q.question}`).join('\n')}
     return this.generateTechStack(projectData, config.defaultModel)
   },
 
-  async generateProjectDocuments(projectData: any): Promise<APIResponse<any[]>> {
+  async generateProjectDocuments(projectData: any, documentTypes?: string[]): Promise<APIResponse<any[]>> {
     try {
+      // 获取API密钥
+      const { APIKeyHelper } = await import('./utils/api-key-helper')
+      const apiKey = APIKeyHelper.getAPIKey()
+      
+      if (!apiKey) {
+        return {
+          success: false,
+          error: '请先配置OpenRouter API密钥'
+        }
+      }
+
+      // 如果没有指定文档类型，默认生成PRD
+      const docsToGenerate = documentTypes || ['prd']
+      const generatedDocs = []
+
+      for (const docType of docsToGenerate) {
+        try {
+          const docContent = await this.generateSingleDocument(projectData, docType, apiKey)
+          if (docContent) {
+            generatedDocs.push({
+              id: docType,
+              title: this.getDocumentTitle(docType),
+              description: this.getDocumentDescription(docType),
+              status: 'completed',
+              content: docContent,
+              downloadUrl: '#'
+            })
+          }
+        } catch (error) {
+          console.error(`Error generating ${docType}:`, error)
+          generatedDocs.push({
+            id: docType,
+            title: this.getDocumentTitle(docType),
+            description: this.getDocumentDescription(docType),
+            status: 'error',
+            error: error instanceof Error ? error.message : '生成失败'
+          })
+        }
+      }
+
+      return {
+        success: true,
+        data: generatedDocs
+      }
+    } catch (error) {
+      console.error('Generate project documents error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '生成项目文档失败，请稍后重试'
+      }
+    }
+  },
+
+  async generateSingleDocument(projectData: any, docType: string, apiKey: string): Promise<string> {
       const response = await fetch('/api/openrouter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           endpoint: '/chat/completions',
           method: 'POST',
-          apiKey: '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',
+        apiKey: apiKey,
           data: {
-            model: 'anthropic/claude-sonnet-4',
+            model: 'anthropic/claude-3.5-sonnet',
             messages: [
+            {
+              role: 'system',
+              content: `你是一个专业的技术文档编写专家。请根据项目信息生成高质量的${this.getDocumentTitle(docType)}。`
+            },
               {
                 role: 'user',
-                content: `基于以下项目信息，生成完整的产品需求文档(PRD)：
+              content: this.getDocumentPrompt(projectData, docType)
+            }
+          ],
+          max_tokens: 4000,
+          temperature: 0.7
+        }
+      })
+    })
 
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const content = data.choices?.[0]?.message?.content?.trim()
+    
+    if (!content) {
+      throw new Error('AI返回内容为空')
+    }
+
+    return content
+  },
+
+  getDocumentTitle(docType: string): string {
+    const titles = {
+      'prd': '产品需求文档 (PRD)',
+      'tech-design': '技术设计文档',
+      'database-design': '数据库设计文档',
+      'api-spec': 'API接口文档',
+      'user-manual': '用户使用手册',
+      'deployment-guide': '部署运维文档',
+      'requirements-design': '需求设计说明文档',
+      'program-architecture': '程序架构文档',
+      'development-plan': '分阶段开发计划',
+      'development-rules': '项目开发规则',
+      'role-development-rules': '分角色开发规则',
+      'development-review': '开发复盘文档',
+      'implementation-logic': '程序实现逻辑文档',
+      'submodule-architecture': '子模块架构文档',
+      'architecture-audit': '架构审计文档',
+      'code-audit': '代码审计文档',
+      'testing-document': '程序测试文档'
+    }
+    return titles[docType as keyof typeof titles] || '项目文档'
+  },
+
+  getDocumentDescription(docType: string): string {
+    const descriptions = {
+      'prd': '详细的产品功能需求和业务逻辑说明',
+      'tech-design': '系统架构、技术选型和实现方案',
+      'database-design': '数据模型、表结构和关系设计',
+      'api-spec': '详细的API接口规范和使用说明',
+      'user-manual': '面向最终用户的操作指南',
+      'deployment-guide': '系统部署、配置和运维指南',
+      'requirements-design': '详细的需求分析和设计说明',
+      'program-architecture': '详细的程序架构和模块设计',
+      'development-plan': '项目开发的时间规划和里程碑',
+      'development-rules': '开发过程中的规范和标准',
+      'role-development-rules': '不同角色的开发职责和规范',
+      'development-review': '每个阶段的开发总结和反思',
+      'implementation-logic': '核心业务逻辑的实现说明',
+      'submodule-architecture': '各个子模块的详细架构设计',
+      'architecture-audit': '系统架构的审计和评估报告',
+      'code-audit': '代码质量和规范的审计报告',
+      'testing-document': '测试策略、用例和报告'
+    }
+    return descriptions[docType as keyof typeof descriptions] || '项目相关文档'
+  },
+
+  getDocumentPrompt(projectData: any, docType: string): string {
+    const baseInfo = `
 项目名称：${projectData.name}
 项目描述：${projectData.description}
 项目类型：${projectData.type}
+${projectData.selectedModel ? `选择的AI模型：${projectData.selectedModel}` : ''}
+${projectData.selectedTools && projectData.selectedTools.length > 0 ? `选择的开发工具：${projectData.selectedTools.join(', ')}` : ''}
+${projectData.selectedTechStack && projectData.selectedTechStack.length > 0 ? `选择的技术栈：${projectData.selectedTechStack.join(', ')}` : ''}
 ${projectData.clarificationAnswers ? `澄清问题答案：\n${JSON.stringify(projectData.clarificationAnswers, null, 2)}` : ''}
+`
 
-请生成一个完整的PRD文档，包含以下章节：
+    const prompts = {
+      'prd': `${baseInfo}
+
+请生成一个完整的产品需求文档(PRD)，包含以下章节：
 
 1. 项目概述
 2. 产品目标
@@ -1088,99 +1222,250 @@ ${projectData.clarificationAnswers ? `澄清问题答案：\n${JSON.stringify(pr
 7. 开发计划
 8. 风险评估
 
-请以Markdown格式返回完整的PRD文档内容。`
-              }
-            ],
-            max_tokens: 3000,
-            temperature: 0.7
-          }
-        })
-      })
+请以Markdown格式返回完整的PRD文档内容。`,
 
-      if (!response.ok) {
-        // 如果Claude Sonnet 4失败，自动回退到Claude 3.5
-        console.log('Claude Sonnet 4 failed for PRD generation, falling back to Claude 3.5...')
-        const fallbackResponse = await fetch('/api/openrouter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            endpoint: '/chat/completions',
-            method: 'POST',
-            apiKey: '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',
-            data: {
-              model: 'anthropic/claude-3.5-sonnet',
-              messages: [
-                {
-                  role: 'user',
-                  content: `基于以下项目信息，生成完整的产品需求文档(PRD)：
+      'tech-design': `${baseInfo}
 
-项目名称：${projectData.name}
-项目描述：${projectData.description}
-项目类型：${projectData.type}
+请生成一个完整的技术设计文档，包含以下章节：
 
-请生成一个完整的PRD文档，包含项目概述、产品目标、目标用户、功能需求、技术架构建议等章节。
-请以Markdown格式返回。`
-                }
-              ],
-              max_tokens: 3000,
-              temperature: 0.7
-            }
-          })
-        })
+1. 系统架构设计
+2. 技术栈选择
+3. 数据库设计方案
+4. API接口设计
+5. 安全性设计
+6. 性能优化方案
+7. 部署架构
+8. 开发规范
 
-        if (!fallbackResponse.ok) {
-          const errorData = await fallbackResponse.json()
-          return { 
-            success: false, 
-            error: errorData.error || `HTTP ${fallbackResponse.status}: ${fallbackResponse.statusText}` 
-          }
-        }
+请以Markdown格式返回完整的技术设计文档内容。`,
 
-        const fallbackData = await fallbackResponse.json()
-        const prdContent = fallbackData.choices?.[0]?.message?.content?.trim()
-        
-        if (!prdContent) {
-          return { success: false, error: 'AI返回内容为空' }
-        }
+      'database-design': `${baseInfo}
 
-        return {
-          success: true,
-          data: [{
-            id: 'prd',
-            title: '产品需求文档 (PRD)',
-            description: '基于AI生成的完整产品需求文档',
-            status: 'completed',
-            content: prdContent,
-            downloadUrl: '#'
-          }]
-        }
-      }
+请生成一个完整的数据库设计文档，包含以下章节：
 
-      const data = await response.json()
-      const prdContent = data.choices?.[0]?.message?.content?.trim()
-      
-      if (!prdContent) {
-        return { success: false, error: 'AI返回内容为空' }
-      }
+1. 数据模型设计
+2. 表结构定义
+3. 索引设计策略
+4. 数据关系图
+5. 数据迁移方案
+6. 备份恢复策略
+7. 性能优化建议
+8. 数据安全策略
 
-      return {
-        success: true,
-        data: [{
-          id: 'prd',
-          title: '产品需求文档 (PRD)',
-          description: '基于AI生成的完整产品需求文档',
-          status: 'completed',
-          content: prdContent,
-          downloadUrl: '#'
-        }]
-      }
-    } catch (error) {
-      console.error('Generate PRD error:', error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : '生成PRD文档失败，请稍后重试'
-      }
+请以Markdown格式返回完整的数据库设计文档内容。`,
+
+      'api-spec': `${baseInfo}
+
+请生成一个完整的API接口文档，包含以下章节：
+
+1. API概述
+2. 认证机制
+3. 接口列表
+4. 请求/响应格式
+5. 错误码规范
+6. 接口测试用例
+7. 版本管理
+8. 使用示例
+
+请以Markdown格式返回完整的API接口文档内容。`,
+
+      'user-manual': `${baseInfo}
+
+请生成一个完整的用户使用手册，包含以下章节：
+
+1. 产品介绍
+2. 快速开始
+3. 功能操作指南
+4. 常见问题解答
+5. 故障排除方法
+6. 最佳实践建议
+7. 联系支持方式
+8. 更新日志
+
+请以Markdown格式返回完整的用户使用手册内容。`,
+
+      'deployment-guide': `${baseInfo}
+
+请生成一个完整的部署运维文档，包含以下章节：
+
+1. 环境配置要求
+2. 部署步骤说明
+3. 配置管理
+4. 监控配置方案
+5. 日志管理策略
+6. 备份恢复流程
+7. 故障处理流程
+8. 性能调优指南
+
+请以Markdown格式返回完整的部署运维文档内容。`,
+
+      'requirements-design': `${baseInfo}
+
+请生成一个完整的需求设计说明文档，包含以下章节：
+
+1. 需求分析概述
+2. 功能需求详细设计
+3. 界面设计规范
+4. 交互流程设计
+5. 业务规则定义
+6. 约束条件说明
+7. 验收标准
+8. 变更管理流程
+
+请以Markdown格式返回完整的需求设计说明文档内容。`,
+
+      'program-architecture': `${baseInfo}
+
+请生成一个完整的程序架构文档，包含以下章节：
+
+1. 架构概述
+2. 架构模式选择
+3. 模块划分设计
+4. 组件设计规范
+5. 接口定义
+6. 依赖关系图
+7. 架构决策记录
+8. 扩展性设计
+
+请以Markdown格式返回完整的程序架构文档内容。`,
+
+      'development-plan': `${baseInfo}
+
+请生成一个完整的分阶段开发计划，包含以下章节：
+
+1. 项目概述
+2. 开发阶段划分
+3. 时间安排计划
+4. 里程碑定义
+5. 资源分配方案
+6. 风险评估与应对
+7. 交付物清单
+8. 质量保证计划
+
+请以Markdown格式返回完整的分阶段开发计划内容。`,
+
+      'development-rules': `${baseInfo}
+
+请生成一个完整的项目开发规则文档，包含以下章节：
+
+1. 编码规范
+2. 命名约定
+3. 版本控制规范
+4. 代码审查流程
+5. 测试标准
+6. 文档编写要求
+7. 代码质量检查
+8. 团队协作规范
+
+请以Markdown格式返回完整的项目开发规则文档内容。`,
+
+      'role-development-rules': `${baseInfo}
+
+请生成一个完整的分角色开发规则文档，包含以下章节：
+
+1. 角色定义
+2. 职责分工
+3. 协作流程
+4. 沟通机制
+5. 权限管理
+6. 考核标准
+7. 培训计划
+8. 团队建设
+
+请以Markdown格式返回完整的分角色开发规则文档内容。`,
+
+      'development-review': `${baseInfo}
+
+请生成一个完整的开发复盘文档，包含以下章节：
+
+1. 阶段总结
+2. 目标达成情况
+3. 问题分析
+4. 经验教训
+5. 改进建议
+6. 最佳实践总结
+7. 下阶段计划
+8. 风险预警
+
+请以Markdown格式返回完整的开发复盘文档内容。`,
+
+      'implementation-logic': `${baseInfo}
+
+请生成一个完整的程序实现逻辑文档，包含以下章节：
+
+1. 核心算法设计
+2. 业务逻辑实现
+3. 数据处理流程
+4. 异常处理机制
+5. 性能优化考虑
+6. 代码注释规范
+7. 调试指南
+8. 维护说明
+
+请以Markdown格式返回完整的程序实现逻辑文档内容。`,
+
+      'submodule-architecture': `${baseInfo}
+
+请生成一个完整的子模块架构文档，包含以下章节：
+
+1. 模块划分原则
+2. 接口设计规范
+3. 数据流设计
+4. 控制流设计
+5. 依赖关系管理
+6. 测试策略
+7. 集成方案
+8. 维护指南
+
+请以Markdown格式返回完整的子模块架构文档内容。`,
+
+      'architecture-audit': `${baseInfo}
+
+请生成一个完整的架构审计文档，包含以下章节：
+
+1. 审计概述
+2. 架构评估标准
+3. 性能分析报告
+4. 安全审计结果
+5. 可维护性评估
+6. 扩展性分析
+7. 改进建议
+8. 行动计划
+
+请以Markdown格式返回完整的架构审计文档内容。`,
+
+      'code-audit': `${baseInfo}
+
+请生成一个完整的代码审计文档，包含以下章节：
+
+1. 审计概述
+2. 代码质量评估
+3. 规范检查结果
+4. 安全漏洞分析
+5. 性能问题识别
+6. 重构建议
+7. 最佳实践推荐
+8. 改进计划
+
+请以Markdown格式返回完整的代码审计文档内容。`,
+
+      'testing-document': `${baseInfo}
+
+请生成一个完整的程序测试文档，包含以下章节：
+
+1. 测试策略
+2. 测试用例设计
+3. 测试数据准备
+4. 测试环境配置
+5. 测试执行计划
+6. 测试报告模板
+7. 缺陷管理流程
+8. 测试自动化
+
+请以Markdown格式返回完整的程序测试文档内容。`
     }
+
+    return prompts[docType as keyof typeof prompts] || `${baseInfo}\n\n请生成项目相关文档。`
   },
 
   async generatePRD(projectData: any): Promise<APIResponse<{ prd: string }>> {
@@ -1222,37 +1507,6 @@ ${projectData.clarificationAnswers ? `澄清问题答案：\n${JSON.stringify(pr
     return this.generateTechStack(projectData, config.defaultModel)
   },
 
-  async generateProjectDocuments(projectData: any): Promise<APIResponse<any[]>> {
-    try {
-      const aiService = new OpenRouterService()
-      
-      const result = await aiService.generatePRD(projectData)
-
-      if (result.success && result.data) {
-        return {
-          success: true,
-          data: [{
-            id: 'prd',
-            title: '产品需求文档 (PRD)',
-            description: '基于AI生成的完整产品需求文档',
-            status: 'completed',
-            content: result.data.prd,
-            downloadUrl: '#'
-          }]
-        }
-      }
-
-      return {
-        success: false,
-        error: result.error
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: handleAPIError(error)
-      }
-    }
-  },
 
   async testApiKey(apiKey?: string): Promise<APIResponse<boolean>> {
     try {
@@ -1282,7 +1536,7 @@ export const apiKeyAPI = {
         success: true,
         data: {
           valid: result.success || false,
-          model: result.success ? 'claude-sonnet-4' : undefined
+          model: result.success ? 'claude-3.5-sonnet' : undefined
         }
       }
     }

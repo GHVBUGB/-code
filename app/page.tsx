@@ -250,7 +250,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-9 gap-4 items-center">
             {/* Step 1 */}
             <div className="text-center">
               <div className="w-16 h-16 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -298,8 +298,23 @@ export default function HomePage() {
 
             {/* Step 4 */}
             <div className="text-center">
-              <div className="w-16 h-16 bg-success-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-warning-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white font-bold text-xl">4</span>
+              </div>
+              <h3 className="font-semibold mb-2">文档预览</h3>
+              <p className="text-sm text-gray-400">
+                查看将要生成的文档
+              </p>
+            </div>
+
+            <div className="hidden md:flex items-center justify-center">
+              <ArrowRight className="w-6 h-6 text-gray-400" />
+            </div>
+
+            {/* Step 5 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-success-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white font-bold text-xl">5</span>
               </div>
               <h3 className="font-semibold mb-2">生成文档</h3>
               <p className="text-sm text-gray-400">

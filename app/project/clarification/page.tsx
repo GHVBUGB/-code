@@ -20,7 +20,9 @@ import {
   Zap,
   CheckCircle2,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Bot,
+  SkipForward
 } from "lucide-react"
 import { RouteGuard } from "@/components/auth/route-guard"
 import { toast } from "sonner"
@@ -42,6 +44,7 @@ export default function ClarificationPage() {
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [hasGenerated, setHasGenerated] = useState(false)
+  const [aiHelpLoading, setAiHelpLoading] = useState<string | null>(null) // 记录正在获取AI帮助的问题ID
 
   // 从store中恢复之前的答案
   useEffect(() => {
@@ -86,7 +89,7 @@ export default function ClarificationPage() {
           method: 'POST',
           apiKey: apiKey,
           data: {
-            model: 'anthropic/claude-sonnet-4',
+            model: 'anthropic/claude-3.5-sonnet',
             messages: [{
               role: 'user',
               content: `基于以下项目信息，生成5-6个具体的澄清问题，帮助更好地理解项目需求：
@@ -248,6 +251,108 @@ export default function ClarificationPage() {
     ))
   }
 
+  // AI帮答功能
+  const handleAIHelp = async (questionId: string) => {
+    const question = questions.find(q => q.id === questionId)
+    if (!question) return
+
+    // 检查API密钥
+    const apiKey = APIKeyHelper.getAPIKey()
+    if (!apiKey) {
+      toast.error("请先在设置页面配置OpenRouter API密钥")
+      return
+    }
+
+    // 检查API密钥有效性
+    const keyStatus = APIKeyHelper.getAPIKeyStatus()
+    if (!keyStatus.isValid) {
+      toast.error(`API密钥无效: ${keyStatus.error}`)
+      return
+    }
+
+    setAiHelpLoading(questionId)
+    
+    try {
+      const response = await fetch('/api/openrouter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          endpoint: '/chat/completions',
+          method: 'POST',
+          apiKey: apiKey,
+          data: {
+            model: 'anthropic/claude-3.5-sonnet',
+            messages: [{
+              role: 'user',
+              content: `基于以下项目信息，为这个问题提供一个具体、实用的建议回答：
+
+项目名称：${projectData.name}
+项目描述：${projectData.description}
+项目类型：${projectData.type}
+
+问题：${question.question}
+
+请提供一个针对该项目的具体建议回答，要求：
+1. 结合项目的实际情况
+2. 回答要具体、可操作
+3. 长度适中，不要过于冗长
+4. 直接给出建议内容，不要添加额外的解释`
+            }],
+            max_tokens: 500,
+            temperature: 0.7
+          }
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+          const aiSuggestion = data.choices[0].message.content.trim()
+          
+          // 将AI建议填入对应的问题答案中
+          handleAnswerChange(questionId, aiSuggestion)
+          toast.success("AI建议已生成")
+        } else {
+          toast.error("AI响应格式错误，请重试")
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        
+        // 检查是否是余额不足的错误
+        if (response.status === 402 || 
+            (errorData.error && errorData.error.message && 
+             errorData.error.message.toLowerCase().includes('insufficient'))) {
+          toast.error("账户余额不足，请充值后重试")
+        } else if (response.status === 401) {
+          toast.error("API密钥无效或账户余额不足")
+        } else {
+          toast.error(`AI服务暂时不可用 (${response.status})`)
+        }
+      }
+    } catch (error) {
+      console.error('AI帮答错误:', error)
+      toast.error("网络错误，请检查网络连接")
+    } finally {
+      setAiHelpLoading(null)
+    }
+  }
+
+  // 跳过功能
+  const handleSkip = (questionId: string) => {
+    const question = questions.find(q => q.id === questionId)
+    if (question?.required) {
+      toast.error("必填问题不能跳过")
+      return
+    }
+    
+    // 将答案设置为空并标记为已跳过
+    handleAnswerChange(questionId, "")
+    toast.success("已跳过该问题")
+  }
+
   const handleBack = () => {
     router.push("/project/ai-tools")
   }
@@ -268,12 +373,27 @@ export default function ClarificationPage() {
       answers[q.id] = q.answer
     })
     
+    console.log('保存澄清问题答案:', answers)
+    console.log('保存前的项目数据:', projectData)
+    
+    // 确保所有必要的数据都存在
+    const updatedData = {
+      ...projectData,
+      clarificationAnswers: answers
+    }
+    
+    console.log('要保存的完整数据:', updatedData)
+    
     updateProjectData({
       clarificationAnswers: answers
     })
     
-    toast.success("需求澄清已保存")
-    router.push("/project/planning")
+    // 等待数据保存完成
+    setTimeout(() => {
+      console.log('澄清数据保存完成，跳转到预览页面')
+      toast.success("需求澄清已保存")
+      router.push("/project/preview")
+    }, 200)
   }
 
   // 计算完成度
@@ -395,6 +515,36 @@ export default function ClarificationPage() {
                       className="min-h-[100px] bg-neutral-900/50 border-neutral-600 text-white placeholder:text-neutral-500"
                       rows={3}
                     />
+                    
+                    {/* AI帮答和跳过按钮 */}
+                    <div className="flex items-center justify-end space-x-2 mt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAIHelp(question.id)}
+                        disabled={aiHelpLoading === question.id}
+                        className="flex items-center space-x-1 text-xs"
+                      >
+                        {aiHelpLoading === question.id ? (
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Bot className="w-3 h-3" />
+                        )}
+                        <span>{aiHelpLoading === question.id ? "生成中..." : "AI帮答"}</span>
+                      </Button>
+                      
+                      {!question.required && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSkip(question.id)}
+                          className="flex items-center space-x-1 text-xs text-neutral-400 hover:text-neutral-300"
+                        >
+                          <SkipForward className="w-3 h-3" />
+                          <span>跳过</span>
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -418,6 +568,22 @@ export default function ClarificationPage() {
               </Button>
             </div>
           )}
+
+          {/* 测试按钮 */}
+          <div className="flex justify-center mb-8">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                console.log('当前项目数据:', projectData)
+                console.log('当前问题:', questions)
+                // 直接跳转到预览页面进行测试
+                router.push("/project/preview")
+              }}
+              className="flex items-center space-x-2"
+            >
+              <span>测试跳转到预览页面</span>
+            </Button>
+          </div>
 
           {/* 导航按钮 */}
           <div className="flex justify-between">

@@ -1,17 +1,32 @@
 # 复制以下内容到 .env.local 文件中
 # 将 YOUR_ACTUAL_API_KEY 替换为你的真实OpenRouter API密钥
 
+# OpenRouter API配置
 NEXT_PUBLIC_OPENROUTER_API_KEY=sk-or-v1-YOUR_ACTUAL_API_KEY
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
 
-# 如何获取API密钥：
+# Supabase配置（可选，如果不配置将使用本地存储）
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# 如何获取OpenRouter API密钥：
 # 1. 访问 https://openrouter.co/
 # 2. 注册并登录账户
 # 3. 进入 https://openrouter.co/token
 # 4. 点击 "Create Key" 创建新密钥
 # 5. 复制完整密钥（格式：sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx）
 # 6. 确保账户有足够余额（建议充值$5-10用于测试）
+
+# 如何获取Supabase配置（可选）：
+# 1. 访问 https://supabase.com/
+# 2. 注册并登录账户
+# 3. 创建新项目
+# 4. 在项目设置中找到API配置
+# 5. 复制URL和anon key
+# 6. 如果需要服务端操作，复制service role key
+# 注意：如果不配置Supabase，系统将使用本地存储进行用户认证
 
 # 重要更新：
 # - OpenRouter官方域名已更新为 openrouter.co

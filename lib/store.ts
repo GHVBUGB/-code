@@ -3,12 +3,7 @@ import { persist } from 'zustand/middleware'
 
 // 澄清数据类型
 interface ClarificationData {
-  targetAudience: string
-  keyFeatures: string
-  technicalRequirements: string
-  timeline: string
-  budget: string
-  additionalNotes: string
+  [key: string]: string
 }
 
 // 项目创建流程的数据类型
@@ -20,10 +15,15 @@ interface ProjectData {
   
   // AI工具选择
   selectedModel: string
+  selectedModels: string[] // 多选AI模型
   selectedTools: string[]
+  selectedTechStack: string[]
   
   // 需求澄清
   clarificationAnswers: ClarificationData
+  
+  // 文档预览选择
+  selectedDocuments: string[]
   
   // 生成状态
   isGenerating: boolean
@@ -61,15 +61,11 @@ const initialProjectData: ProjectData = {
   description: '',
   type: '',
   selectedModel: '',
+  selectedModels: [],
   selectedTools: [],
-  clarificationAnswers: {
-    targetAudience: '',
-    keyFeatures: '',
-    technicalRequirements: '',
-    timeline: '',
-    budget: '',
-    additionalNotes: ''
-  },
+  selectedTechStack: [],
+  clarificationAnswers: {},
+  selectedDocuments: [],
   isGenerating: false,
   generationProgress: 0,
   generatedDocuments: []
@@ -140,8 +136,9 @@ export const useProjectStore = create<ProjectStore>()(
       getCompletionStatus: () => {
         const { projectData } = get()
         const basicsComplete = !!(projectData.name && projectData.description && projectData.type)
-        const toolsComplete = !!projectData.selectedModel
-        const clarificationComplete = Object.keys(projectData.clarificationAnswers).length >= 3 // 假设至少需要3个答案
+        // 修复：检查selectedModels数组或selectedModel
+        const toolsComplete = !!(projectData.selectedModel || (projectData.selectedModels && projectData.selectedModels.length > 0))
+        const clarificationComplete = Object.keys(projectData.clarificationAnswers).length >= 1 // 降低要求，至少1个答案即可
         
         return {
           basicsComplete,
@@ -190,22 +187,29 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
   login: async (email: string, password: string) => {
     set({ isLoading: true })
     try {
-      // TODO: 实现真实的登录逻辑
-      // 这里可以集成Supabase认证
+      const { AuthService } = await import('./supabase/auth')
+      const result = await AuthService.login({ email, password })
       
-      // 模拟登录
-      const mockUser: User = {
-        id: '1',
-        email,
-        username: email.split('@')[0],
-        avatar: '/placeholder-user.jpg'
+      if (result.success && result.user) {
+        // 保存到localStorage
+        localStorage.setItem('auth-token', result.token || 'mock-token')
+        localStorage.setItem('user-data', JSON.stringify(result.user))
+        
+        const user: User = {
+          id: result.user.id,
+          email: result.user.email,
+          username: result.user.username,
+          avatar: '/placeholder-user.jpg'
+        }
+        
+        set({ 
+          user, 
+          isAuthenticated: true, 
+          isLoading: false 
+        })
+      } else {
+        throw new Error(result.error || '登录失败')
       }
-      
-      set({ 
-        user: mockUser, 
-        isAuthenticated: true, 
-        isLoading: false 
-      })
     } catch (error) {
       set({ isLoading: false })
       throw error
@@ -215,21 +219,34 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
   register: async (username: string, email: string, password: string) => {
     set({ isLoading: true })
     try {
-      // TODO: 实现真实的注册逻辑
-      
-      // 模拟注册
-      const mockUser: User = {
-        id: '1',
-        email,
-        username,
-        avatar: '/placeholder-user.jpg'
-      }
-      
-      set({ 
-        user: mockUser, 
-        isAuthenticated: true, 
-        isLoading: false 
+      const { AuthService } = await import('./supabase/auth')
+      const result = await AuthService.register({ 
+        username, 
+        email, 
+        password, 
+        confirmPassword: password 
       })
+      
+      if (result.success && result.user) {
+        // 保存到localStorage
+        localStorage.setItem('auth-token', result.token || 'mock-token')
+        localStorage.setItem('user-data', JSON.stringify(result.user))
+        
+        const user: User = {
+          id: result.user.id,
+          email: result.user.email,
+          username: result.user.username,
+          avatar: '/placeholder-user.jpg'
+        }
+        
+        set({ 
+          user, 
+          isAuthenticated: true, 
+          isLoading: false 
+        })
+      } else {
+        throw new Error(result.error || '注册失败')
+      }
     } catch (error) {
       set({ isLoading: false })
       throw error
@@ -241,6 +258,14 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
     localStorage.removeItem('auth-token')
     localStorage.removeItem('user-data')
     
+    // Clear local auth session
+    try {
+      const { AuthService } = require('./supabase/auth')
+      AuthService.clearSession()
+    } catch (error) {
+      console.warn('Failed to clear auth session:', error)
+    }
+    
     set({ 
       user: null, 
       isAuthenticated: false 
@@ -250,6 +275,27 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
   checkAuth: async () => {
     set({ isLoading: true })
     try {
+      // First check local auth session
+      const { AuthService } = await import('./supabase/auth')
+      const session = AuthService.getCurrentSession()
+      
+      if (session && session.user) {
+        const user: User = {
+          id: session.user.id,
+          email: session.user.email,
+          username: session.user.username,
+          avatar: '/placeholder-user.jpg'
+        }
+        
+        set({ 
+          user, 
+          isAuthenticated: true, 
+          isLoading: false 
+        })
+        return
+      }
+      
+      // Fallback to localStorage
       const token = localStorage.getItem('auth-token')
       const userData = localStorage.getItem('user-data')
       
@@ -299,7 +345,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
-      selectedModel: 'anthropic/claude-sonnet-4',
+      selectedModel: 'anthropic/claude-3.5-sonnet',
       preferredTools: [],
       setSelectedModel: (model) => set({ selectedModel: model }),
       toggleTool: (tool) =>

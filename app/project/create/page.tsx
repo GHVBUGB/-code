@@ -50,14 +50,16 @@ export default function CreateProjectPage() {
   const [projectDescription, setProjectDescription] = useState(projectData.description || "")
   const [currentTip, setCurrentTip] = useState(0)
   const [isOptimizing, setIsOptimizing] = useState(false)
-  const [projectType, setProjectType] = useState("")
+  const [projectType, setProjectType] = useState(projectData.type || "")
   const { addToast } = useToast()
   const router = useRouter()
 
   const steps = [
     { id: 1, name: "基本信息", status: "current" },
     { id: 2, name: "AI工具", status: "upcoming" },
-    { id: 3, name: "完成", status: "upcoming" }
+    { id: 3, name: "需求澄清", status: "upcoming" },
+    { id: 4, name: "文档预览", status: "upcoming" },
+    { id: 5, name: "生成文档", status: "upcoming" }
   ]
 
   const tips = [
@@ -107,7 +109,7 @@ export default function CreateProjectPage() {
     { id: "other", name: "其他", description: "其他类型项目" }
   ]
 
-  const canProceed = projectName.trim() !== '' && projectDescription.trim() !== ''
+  const canProceed = projectName.trim() !== '' && projectDescription.trim() !== '' && projectType !== ''
 
   // 重新设计的优化功能
   const handleOptimize = async () => {
@@ -315,6 +317,32 @@ export default function CreateProjectPage() {
                       </Button>
                     </div>
 
+                    {/* 项目类型选择 */}
+                    <div>
+                      <Label>项目类型</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                        {projectTypes.map((type) => (
+                          <Card
+                            key={type.id}
+                            variant={projectType === type.id ? "elevated" : "bordered"}
+                            className={`cursor-pointer transition-all ${
+                              projectType === type.id 
+                                ? 'ring-2 ring-primary-500 bg-primary-50' 
+                                : 'hover:bg-muted/50'
+                            }`}
+                            onClick={() => setProjectType(type.id)}
+                          >
+                            <CardContent className="p-3">
+                              <div className="text-sm font-medium">{type.name}</div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {type.description}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* 项目描述 */}
                     <div>
                       <Label htmlFor="project-description">项目描述</Label>
@@ -351,6 +379,14 @@ export default function CreateProjectPage() {
                       <div className="flex items-center text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                         <AlertCircle className="w-4 h-4 mr-2" />
                         请先填写项目名称和描述后再使用优化功能
+                      </div>
+                    ) : null}
+
+                    {/* 项目类型提示 */}
+                    {!projectType ? (
+                      <div className="flex items-center text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                        <AlertCircle className="w-4 h-4 mr-2" />
+                        请选择项目类型以继续下一步
                       </div>
                     ) : null}
                   </CardContent>
@@ -433,7 +469,7 @@ export default function CreateProjectPage() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 返回
               </Button>
-              <Button onClick={handleNext} disabled={!projectName.trim()}>
+              <Button onClick={handleNext} disabled={!canProceed}>
                 下一步
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
